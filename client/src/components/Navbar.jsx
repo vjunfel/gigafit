@@ -18,14 +18,9 @@ const Navbar = () => {
         <div className="navbar-nav gap-3 align-items-center">
           {user ? (
             <>
-              {user.isAdmin ? (
-                <Link className="nav-link" to="/dashboard">Dashboard</Link>
-              ) : (
-                <>
-                  <Link className="nav-link" to="/">Home</Link>
-                  <Link className="nav-link" to="/profile">Profile</Link>
-                </>
-              )}
+              <Link className="nav-link" to="/">Home</Link>
+              <Link className="nav-link" to="/dashboard">Dashboard</Link>
+              <Link className="nav-link" to="/profile">Profile</Link>
 
               <button onClick={handleLogout} className="btn btn-sm btn-outline-light ms-2">
                 Logout

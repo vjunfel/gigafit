@@ -1,154 +1,163 @@
-import { useEffect, useState } from "react";
-import API from "../api";
-import BlogCard from "./BlogPostCard";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from "react";
+import { Table, Badge, Container, Button, Form, Row, Col } from "react-bootstrap";
+import Axios from "../api";
+
+// Status color mapping
+const getStatusVariant = (status) => {
+  switch (status) {
+    case "completed":
+      return "success";
+    case "pending":
+      return "warning";
+    case "missed":
+      return "danger";
+    default:
+      return "secondary";
+  }
+};
 
 const Dashboard = () => {
-	const [posts, setPosts] = useState([]);
-	const [title, setTitle] = useState("");
-	const [content, setContent] = useState("");
-	const [showForm, setShowForm] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editId, setEditId] = useState(null);
-	const [loading, setLoading] = useState(false);
+  const [workouts, setWorkouts] = useState([]);
+  const [newWorkout, setNewWorkout] = useState({
+    name: "",
+    duration: "",
+    status: "pending",
+  });
 
-	const fetchBlogs = async () => {
-		setLoading(true);
-		try {
-			const res = await API.get("/posts");
-			setPosts(res.data);
-		} catch (err) {
-			console.error("Error fetching posts:", err);
-		} finally {
-      setLoading(false);
-    }
-	};
-
-	useEffect(() => {
-		fetchBlogs();
-	}, []);
-
-	const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const fetchWorkouts = async () => {
     try {
-      if (editMode) {
-        const res = await API.patch(`/posts/post/${editId}`, { title, content });
-        if (res.status === 200) {
-          setPosts((prev) =>
-            prev.map((post) => (post._id === editId ? res.data.updatedPost : post))
-          );
-          toast.success("Post updated");
-        }
-      } else {
-        const res = await API.post("/posts/post", { title, content });
-        if (res.status === 201) {
-          setPosts((prev) => [res.data, ...prev]);
-          toast.success("Post created");
-        }
-      }
-
-      // Reset states after successful operation
-      setTitle("");
-      setContent("");
-      setEditId(null);
-      setEditMode(false);
-      setShowForm(false);
-			fetchBlogs();
+      const res = await Axios.get("/workouts/getMyWorkouts");
+      setWorkouts(res.data);
+			console.log(res);
+			
+			if (Array.isArray(res.data)) {
+				setWorkouts(res.data);
+			} else if (Array.isArray(res.data.workouts)) {
+				setWorkouts(res.data.workouts);
+			} else {
+				console.warn("Unexpected response format:", res.data);
+				setWorkouts([]);
+			}
     } catch (err) {
-      console.error("Error submitting post:", err);
-      toast.error("Post submission failed");
+      console.error("Error fetching workouts:", err);
     }
   };
 
-  
-  const handleEdit = (post) => {
-    setTitle(post.title);
-    setContent(post.content);
-    setEditId(post._id);
-    setShowForm(true);
-    setEditMode(true);
-  };
-  
-  const handleDelete = async (postId) => {
+  const handleAddWorkout = async () => {
     try {
-      await API.delete(`/posts/post/${postId}`);
-      setPosts((prev) => prev.filter((post) => post._id !== postId));
-      toast.success("Post deleted successfully");
+      const res = await Axios.post("/workouts/addWorkout", newWorkout);
+      setWorkouts([...workouts, res.data]);
+      setNewWorkout({ name: "", duration: "", status: "pending" });
     } catch (err) {
-      console.error("Delete failed", err);
-      toast.error("Failed to delete post");
+      console.error("Error adding workout:", err);
     }
   };
-	
-	if (loading)
-		return (
-			<div className="text-center my-5 py-5">
-				<div className="spinner-border m-3"></div>
-				<p>Loading...</p>
-			</div>
-		);
 
-	return (
-		<div className="container py-4">
-			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center my-5 gap-2">
-				<h2 className="m-0">Admin Dashboard</h2>
-				<button
-					className="btn btn-success"
-					onClick={() => setShowForm((prev) => !prev)}
-				>
-					{showForm ? "Close Form" : "Add New Post"}
-				</button>
-			</div>
+  const handleStatusChange = async (id, status) => {
+    try {
+      const res = await Axios.patch(`/workouts/updateWorkout/${id}`, { status });
+      setWorkouts((prev) =>
+        prev.map((w) => (w._id === id ? { ...w, status: res.data.status } : w))
+      );
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
+  };
 
-			{/* Blog Post Input Form Layer */}
-			{showForm && (
-				<div className="card p-4 mb-5 border-primary border- shadow-lg">
-					<h4 className="mb-3">Add New Blog Post</h4>
-					<form onSubmit={handleSubmit}>
-						<div className="mb-3">
-							<label className="form-label">Title</label>
-							<input
-								type="text"
-								className="form-control"
-								value={title}
-								onChange={(e) => setTitle(e.target.value)}
-								required
-							/>
-						</div>
-						<div className="mb-3">
-							<label className="form-label">Content</label>
-							<textarea
-								className="form-control"
-								rows="5"
-								value={content}
-								onChange={(e) => setContent(e.target.value)}
-								required
-							></textarea>
-						</div>
-						
-						<button	type="submit"	className="btn btn-primary px-4">Post Blog</button>
-					</form>
-				</div>
-			)}
+  const handleDelete = async (id) => {
+    try {
+      await Axios.delete(`/workouts/deleteWorkout/${id}`);
+      setWorkouts((prev) => prev.filter((w) => w._id !== id));
+    } catch (err) {
+      console.error("Error deleting workout:", err);
+    }
+  };
 
-			{/* Blog List */}
-			{posts.length === 0 ? (
-				<p className="text-center">No blog posts found.</p>
-			) : (
-				<div className="d-flex flex-column gap-5 pb-3">
-					{posts.map((post, index) => (
-						<BlogCard
-							key={post._id || index}
-							post={post}
-							onDelete={() => handleDelete(post._id)}
-							onEdit={() => handleEdit(post)}
-						/>
-					))}
-				</div>
-			)}
-		</div>
-	);
+  useEffect(() => {
+    fetchWorkouts();
+  }, []);
+
+  return (
+    <Container className="py-5">
+      <h2 className="mb-4">Your Workout List</h2>
+
+      {/* Add Workout Form */}
+      <Row className="mb-4">
+        <Col md={3}>
+          <Form.Control
+            placeholder="Workout name"
+            value={newWorkout.name}
+            onChange={(e) => setNewWorkout({ ...newWorkout, name: e.target.value })}
+          />
+        </Col>
+        <Col md={2}>
+          <Form.Control
+            placeholder="Duration (e.g. 30 mins)"
+            value={newWorkout.duration}
+            onChange={(e) => setNewWorkout({ ...newWorkout, duration: e.target.value })}
+          />
+        </Col>
+        <Col md={2}>
+          <Form.Select
+            value={newWorkout.status}
+            onChange={(e) => setNewWorkout({ ...newWorkout, status: e.target.value })}
+          >
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="missed">Missed</option>
+          </Form.Select>
+        </Col>
+        <Col md={2}>
+          <Button onClick={handleAddWorkout}>Add Workout</Button>
+        </Col>
+      </Row>
+
+      {/* Workout Table */}
+      <Table striped bordered hover responsive>
+        <thead className="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Workout Name</th>
+            <th>Duration</th>
+            <th>Date Added</th>
+            <th>Status</th>
+            <th>Update</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {workouts.map((workout, index) => (
+            <tr key={workout._id}>
+              <td>{index + 1}</td>
+              <td>{workout.name}</td>
+              <td>{workout.duration}</td>
+              <td>{new Date(workout.dateAdded).toLocaleDateString()}</td>
+              <td>
+                <Badge bg={getStatusVariant(workout.status)} className="text-uppercase">
+                  {workout.status}
+                </Badge>
+              </td>
+              <td>
+                <Form.Select
+                  value={workout.status}
+                  onChange={(e) => handleStatusChange(workout._id, e.target.value)}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                  <option value="missed">Missed</option>
+                </Form.Select>
+              </td>
+              <td>
+                <Button variant="danger" size="sm" onClick={() => handleDelete(workout._id)}>
+                  Delete
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </Container>
+  );
 };
 
 export default Dashboard;
