@@ -9,12 +9,12 @@ import { AuthProvider } from './contexts/AuthContext.jsx';
 import { BrowserRouter } from 'react-router-dom';
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
 		<BrowserRouter>
 			<AuthProvider>
 				<App />
 				<ToastContainer position="bottom-right" autoClose={3000} />
 			</AuthProvider>
 		</BrowserRouter>
-	</StrictMode>
+	// </StrictMode>
 )

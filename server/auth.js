@@ -14,16 +14,16 @@ module.exports.createAccessToken = (user) => {
 }
 
 module.exports.verify = (req, res, next) => {
-    console.log(req.headers.authorization);
+    // console.log(req.headers.authorization);
 
     let token = req.headers.authorization;
 
     if(typeof token === "undefined"){
         return res.send({ auth: "Failed. No Token" });
     } else {
-        console.log(token);
+        // console.log(token);
         token = token.slice(7, token.length);
-        console.log(token);
+        // console.log(token);
 
         jwt.verify(token, JWT_SECRET_KEY, function(err, decodedToken){
             if(err) {
@@ -32,8 +32,8 @@ module.exports.verify = (req, res, next) => {
                     message: err.message
                 });
             } else {
-                console.log("Result from verify method:")
-                console.log(decodedToken);
+                // console.log("Result from verify method:")
+                // console.log(decodedToken);
 
                 req.user = decodedToken;
 

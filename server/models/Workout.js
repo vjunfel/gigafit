@@ -15,7 +15,8 @@ const workoutSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    default: "pending"
+    enum: ['pending', 'completed', 'missed'],
+    default: 'pending',
   },
   userId: {
         type: mongoose.Schema.Types.ObjectId,

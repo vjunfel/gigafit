@@ -4,36 +4,48 @@ import API from "../api";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
 
-const BlogDetails = () => {
-  const { postId } = useParams();
+const WorkoutDetails = () => {
+  const { workoutId } = useParams();
   const { user } = useAuth();
-  const [post, setPost] = useState(null);
+  const [workout, setWorkout] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const fetchPost = async () => {
+  const fetchWorkout = async () => {
     setLoading(true);
     try {
-      const res = await API.get(`/posts/post/${postId}`);
-      setPost(res.data);
+      const res = await API.get("/workouts/getMyWorkouts");
+      console.log('WORKOUTS -----------------', res);
+      console.log(workout);
+      
+      const data = res.data;
+			
+			const fetched = Array.isArray(data)
+      ? data
+      : Array.isArray(data.workouts)
+      ? data.workouts
+      : [];
+
+      setWorkout(fetched);
+      console.log(workout);
     } catch (err) {
-      console.error("Error fetching post:", err);
-      toast.error("Failed to load blog post.");
+      console.error("Error fetching workout:", err);
+      toast.error("Failed to load blog workout.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPost();
-  }, [postId]);
+    fetchWorkout();
+  }, [workoutId]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return toast.error("Comment cannot be empty");
 
     try {
-      const res = await API.patch(`/posts/post/comment/${postId}`, {
+      const res = await API.patch(`/workouts/workout/comment/${workoutId}`, {
         comment: commentText,
       });
       
@@ -43,7 +55,7 @@ const BlogDetails = () => {
       
       toast.success("Comment added");
       setCommentText("");
-      fetchPost();
+      fetchWorkout();
     } catch (err) {
       console.error("Error adding comment:", err);
       toast.error("Failed to add comment");
@@ -52,21 +64,21 @@ const BlogDetails = () => {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      const res = await API.delete(`/posts/post/${postId}/comment/${commentId}`);
+      const res = await API.delete(`/workouts/workout/${workoutId}/comment/${commentId}`);
       
       if (res.status !== 200) {
 				throw new Error("Add comment failed");
 			}
       
       toast.success("Comment deleted");
-      fetchPost();
+      fetchWorkout();
     } catch (err) {
       console.error("Error deleting comment:", err);
       toast.error("Failed to delete comment");
     }
   };
 
-  if (!post) {
+  if (!workout) {
     return <div className="container py-4 text-center">Loading...</div>;
   }
   
@@ -86,16 +98,16 @@ const BlogDetails = () => {
         </Link>
       </div>
 
-      <h1 className="mb-3">{post.title}</h1>
+      <h1 className="mb-3">{workout.title}</h1>
       <p className="text-muted">
-        By <strong>{post.author || "Admin"}</strong> •{" "}
-        {new Date(post.createdAt).toLocaleDateString()}
+        By <strong>{workout.author || "Admin"}</strong> •{" "}
+        {new Date(workout.createdAt).toLocaleDateString()}
       </p>
 
       <hr />
 
       <div className="mt-4" style={{ whiteSpace: "pre-line" }}>
-        {post.content}
+        {workout.content}
       </div>
 
       {/* Comments Section */}
@@ -103,9 +115,9 @@ const BlogDetails = () => {
         <h4 className="mb-3">Comments</h4>
 
         {/* List Comments */}
-        {post.comments?.length > 0 ? (
+        {workout.comments?.length > 0 ? (
           <ul className="list-group mb-4">
-            {post.comments.map((cmt) => (
+            {workout.comments.map((cmt) => (
               <li key={cmt._id} className="list-group-item d-flex justify-content-between align-items-start">
                 <div>
                   <strong>{cmt.userId || "Anonymous"}:</strong> {cmt.comment}
@@ -143,11 +155,11 @@ const BlogDetails = () => {
             <button type="submit" className="btn btn-primary">Submit Comment</button>
           </form>
         ) : (
-          <p><Link to="/login">Log in</Link> to post a comment.</p>
+          <p><Link to="/login">Log in</Link> to workout a comment.</p>
         )}
       </div>
     </div>
   );
 };
 
-export default BlogDetails;
+export default WorkoutDetails;
