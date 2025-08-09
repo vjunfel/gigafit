@@ -11,7 +11,7 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors({
-  origin: ["https://gigafit-junfel.vercel.app", "http://localhost:5173"],
+  origin: ["https://gigafit-rho.vercel.app", "http://localhost:5173"],
   credentials: true
 }));
 
