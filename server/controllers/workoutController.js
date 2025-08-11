@@ -37,6 +37,7 @@ module.exports.getMyWorkouts = (req, res) => {
 
 module.exports.updateWorkout = (req, res) => {
     let workoutUpdates = {
+        _id: req.body._id,
         name: req.body.name,
         duration: req.body.duration,
         status: req.body.status,
@@ -44,7 +45,7 @@ module.exports.updateWorkout = (req, res) => {
     };
 
     Workout.findOneAndUpdate(
-        { _id: req.params.id, userId: req.user.id }, 
+        { _id: req.body._id, userId: req.user.id }, 
         workoutUpdates,
         { new: true }
     )
@@ -54,7 +55,7 @@ module.exports.updateWorkout = (req, res) => {
         }
         return res.status(200).send({
             message: 'Workout updated successfully',
-            updatedWorkout: updatedWorkout
+            data: updatedWorkout
         });
     })
     .catch(err => {
@@ -62,25 +63,6 @@ module.exports.updateWorkout = (req, res) => {
         return res.status(500).send({ error: 'Error in updating a workout.' });
     });
 };
-
-// module.exports.deleteWorkout = (req, res) => {
-//     const { _id } = req.body;
-//     const userId = req.user.id;
-//     if (!_id || userId) return res.status(404).send({ error: 'Invalid' });
-    
-//     // Workout.deleteOne({ _id: req.body.id, userId: req.user.id }) 
-//     Workout.findByIdAndDelete( _id ) 
-//     .then(deletedResult => {
-//         if (deletedResult.deletedCount < 1) {
-//             return res.status(404).send({ error: 'Workout not found or not authorized to delete' });
-//         }
-//         return res.status(200).send({ message: 'Workout deleted successfully' });
-//     })
-//     .catch(err => {
-//         console.error("Error in deleting a workout:", err);
-//         return res.status(500).send({ error: 'Error in deleting a workout.' });
-//     });
-// };
 
 module.exports.deleteWorkout = async (req, res) => {
   const { _id } = req.body;

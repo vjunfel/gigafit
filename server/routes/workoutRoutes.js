@@ -7,7 +7,7 @@ const { verify } = require("../auth");
 router.get("/getMyWorkouts", verify, workoutController.getMyWorkouts);
 router.post("/addWorkout", verify, workoutController.addWorkout);
 router.delete("/deleteWorkout", verify, workoutController.deleteWorkout);
-router.patch("/updateWorkout/:workoutId", verify, workoutController.updateWorkout);
+router.patch("/updateWorkout", verify, workoutController.updateWorkout);
 router.patch("/completeWorkoutStatus/:workoutId", verify, workoutController.completeWorkoutStatus);
 
 module.exports = router;

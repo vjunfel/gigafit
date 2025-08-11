@@ -13,6 +13,7 @@ const CompletedWorkouts = ({ workouts }) => {
             <th>Name</th>
             <th>Duration</th>
             <th>Date</th>
+            <th>Completed</th>
           </tr>
         </thead>
         <tbody>
@@ -22,6 +23,7 @@ const CompletedWorkouts = ({ workouts }) => {
               <td>{workout.name}</td>
               <td>{workout.duration}</td>
               <td>{new Date(workout.dateAdded).toLocaleDateString()}</td>
+              <td><span className="badge bg-success">{workout.status}</span></td>
             </tr>
           ))}
         </tbody>

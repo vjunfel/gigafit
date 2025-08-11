@@ -6,7 +6,7 @@ const ProfileComponent = () => {
   const { user } = useAuth();
 
   return (
-    <Container className="pb-5">
+    <Container className="pb-5 px-0">
       <Row className="justify-content-center">
         <Col md={12}>
           <Card className="shadow-sm border-1 border-secondary bg-black text-white">

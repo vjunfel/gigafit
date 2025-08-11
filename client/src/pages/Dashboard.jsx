@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, Badge, Container, Button, Form, Row, Col } from "react-bootstrap";
 import Axios from "../api";
 import { toast } from "react-toastify";
 import ProfileComponent from "../components/ProfileComponent";
+import CompletedWorkouts from "../components/CompletedWorkouts";
 
 // Status color mapping
 const getStatusVariant = (status) => {
@@ -26,13 +27,9 @@ const Dashboard = () => {
     status: "pending",
   });
   
-  console.log("------------------------------", workouts);
-  
   const fetchWorkouts = async () => {
     try {
       const res = await Axios.get("/workouts/getMyWorkouts");
-			console.log("Workout fetch response:", res);
-      
       const data = res.data;
 			
 			const fetched = Array.isArray(data)
@@ -68,24 +65,27 @@ const Dashboard = () => {
     }
   };
 
-  const handleStatusChange = async (id, status) => {
+  const handleStatusChange = async (workoutData) => {
     try {
-      const res = await Axios.patch(`/workouts/updateWorkout/${id}`, { status });
-      console.log("STATUS", res.data);
+      const res = await Axios.patch(`/workouts/updateWorkout`, { 
+        _id: workoutData._id,
+        name: workoutData.name,
+        status: workoutData.status,
+        dateAdded: workoutData.dateAdded,
+       });
+       
       setWorkouts((prev) =>
-        prev.map((w) => (w._id === id ? { ...w, status: res.data.status } : w))
+        prev.map((w) => (w._id === workoutData._id ? { ...w, status: res.data.status } : w))
       );
+      fetchWorkouts();
     } catch (err) {
       console.error("Error updating status:", err);
     }
   };
 
   const handleDelete = async (workoutId) => {
-    console.log("WORKOUT ID: ", workoutId);
-    
     try {
       const res = await Axios.delete(`/workouts/deleteWorkout`, { data: {_id: workoutId }});
-      // console.log("DEL RES:", res);
       if (res.status !== 200) {
 				throw new Error("Deleting failed");
 			}
@@ -108,7 +108,7 @@ const Dashboard = () => {
       <h2 className="mb-4">Your Workout List</h2>
 
       {/* Add Workout Form */}
-      <Row className="mb-4">
+      <Row className="mb-4 d-flex gap-2 gap-md-0">
         <Col md={3}>
           <Form.Control
             placeholder="Workout name"
@@ -151,7 +151,7 @@ const Dashboard = () => {
           <tr>
             <th>#</th>
             <th>Workout Name</th>
-            <th>Duration (minutes)</th>
+            <th>Duration <span>(minutes)</span></th>
             <th>Date Added</th>
             <th>Status</th>
             <th>Update</th>
@@ -174,7 +174,13 @@ const Dashboard = () => {
               <td>
                 <Form.Select
                   value={workout.status}
-                  onChange={(e) => handleStatusChange(workout._id, e.target.value)}
+                  onChange={(e) => handleStatusChange({
+                    _id: workout._id,
+                    name:workout.name, 
+                    duration: workout.duration, 
+                    status: e.target.value,
+                    dateAdded: new Date(workout.dateAdded).toLocaleDateString()
+                  })}
                 >
                   <option value="pending">Pending</option>
                   <option value="completed">Completed</option>
@@ -197,6 +203,7 @@ const Dashboard = () => {
         </tbody>
       </Table>
       
+      {/* <CompletedWorkouts workouts={workouts}/> */} 
     </Container>
   );
 };
